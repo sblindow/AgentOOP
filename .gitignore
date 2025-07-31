@@ -1,4 +1,10 @@
 .DS_Store
+.cache/
 
 # CMake Build Directory
 build/
+
+# Ignore generated compile_commands.json
+compile_commands.json
+# Ignore generated compile_commands.json
+compile_commands.json
