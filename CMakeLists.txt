@@ -15,8 +15,8 @@ add_library(${LIBNAME} SHARED)
 target_include_directories(${LIBNAME} PUBLIC include)
 target_sources(${LIBNAME}
   PRIVATE
-  src/Actor.cpp
-  include/Actor.h
+  src/Agent.cpp
+  include/Agent.h
 )
 
 

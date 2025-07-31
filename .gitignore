@@ -1,2 +1,4 @@
 .DS_Store
 
+# CMake Build Directory
+build/
