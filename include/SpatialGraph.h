@@ -3,10 +3,13 @@
 #include <vector>
 
 enum class EdgeType {
-  WALKWAY,
-  BUS_LINE,
-  STAIRWAY,
-  STREET
+  FOOTPATH,
+  ELEVATOR
+};
+
+enum class NodeType{
+  INTERSECTION,
+  LOCATION
 };
 
 struct Edge {
@@ -16,13 +19,20 @@ struct Edge {
   int currentLoad = 0; // default member initializer
 };
 
+struct Node {
+  NodeType type;
+  int nodeID;
+};
+
+
 class SpatialGraph {
   private:
     std::vector<std::vector<Edge>> adjacencyList; // adjacencyList: Nodes as vectors of Edges
-    // location data storage - we'll add this later
+    std::vector<Node> nodeData; // this list stores each nodes location Data 
+    
   public:
     int addNode(); // returns the new node's ID
     void addEdge(int fromNodeID, int toNodeID, double distance, EdgeType type);
-    std::vector<Edge>& getNeighbors(int NodeID);
-    int getNodeCount();
+    void traverseEdge(int fromNodeID, int toNodeID);
+    void visitNode(int nodeID);
 };

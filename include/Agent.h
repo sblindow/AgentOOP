@@ -1,21 +1,21 @@
 #pragma once
 
-#include <string>
+enum class AgentType{
+  YOUTH,
+  WORKING,
+  UNEMPLOYED
+};
 
 class Agent{
 private:
-  int actorId;
-  double wealth;
+  AgentType type;
+  
+  
+  
   
 public:
-  std::string name {};
+  int agentID;
 
-  enum class AgentType{
-    YOUTH,
-    WORKING,
-    UNEMPLOYED
-  };
-
-  AgentType type;
-    
+  void agentPercieve(); // updates internal data based on position in world graph
+  void agentAct(); // agent processes internal data and decides on action
 };

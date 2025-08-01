@@ -11,9 +11,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Library for actor class and behavior
 
-set(LIBNAME "actorlib")
+set(LIBNAME "agentlib")
+
 add_library(${LIBNAME} SHARED)
+
 target_include_directories(${LIBNAME} PUBLIC include)
+
 target_sources(${LIBNAME}
   PRIVATE
   src/Agent.cpp
@@ -22,9 +25,11 @@ target_sources(${LIBNAME}
 
 
 # Main application
+
 add_executable(ActorOOP
   src/main.cpp
 )
+
 target_link_libraries(ActorOOP PRIVATE ${LIBNAME})
 
 
