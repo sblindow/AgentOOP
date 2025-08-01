@@ -19,7 +19,14 @@ target_include_directories(${LIBNAME} PUBLIC include)
 
 target_sources(${LIBNAME}
   PRIVATE
+  # src targets
   src/Agent.cpp
+  src/SpatialGraph.cpp
+
+  # include targets
+  include/SpatialGraph.h
+  include/AgentGraph.h
+  include/WorldGraph.h
   include/Agent.h
 )
 
