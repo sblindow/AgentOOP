@@ -18,7 +18,7 @@ struct Edge {
 
 class SpatialGraph {
   private:
-    std::vector<std::vector<Edge>> adjacencyList;
+    std::vector<std::vector<Edge>> adjacencyList; // adjacencyList: Nodes as vectors of Edges
     // location data storage - we'll add this later
   public:
     int addNode(); // returns the new node's ID
