@@ -33,10 +33,10 @@ target_sources(${LIBNAME}
 
 # Main application
 
-add_executable(ActorOOP
+add_executable(AgentOOP
   src/main.cpp
 )
 
-target_link_libraries(ActorOOP PRIVATE ${LIBNAME})
+target_link_libraries(AgentOOP PRIVATE ${LIBNAME})
 
 
