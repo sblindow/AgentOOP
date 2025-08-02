@@ -1,21 +1,31 @@
 #pragma once
 
-enum class AgentType{
-  YOUTH,
-  WORKING,
-  UNEMPLOYED
-};
+#include "SpatialGraph.h"
+
+#include <string>
+
 
 class Agent{
-private:
-  AgentType type;
-  
-  
-  
-  
 public:
-  int agentID;
+  Agent(int timeOfDay);
+  
+  const int agentID;
+  const std::string agentName;
+  
+private:
+  
+  void evaluateNeeds();
+  void percieve();
+  void process();
+  void move();
+  void work();
+  void buy();
+  void eat();
+  void sleep();
 
-  void agentPercieve(); // updates internal data based on position in world graph
-  void agentAct(); // agent processes internal data and decides on action
+  int ticksAwake;
+  int hunger;
+  int energy;
+  
+  SpatialGraph graph; // idiosyncratic knowledge about the world graph
 };
