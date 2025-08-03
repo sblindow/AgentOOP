@@ -22,23 +22,45 @@ struct Edge {
   int currentLoad = 0; // default member initializer
 };
 
-struct Node {
+struct WorldNode {
   const int nodeID;
-  NodeType type;
-  int currentLoad;
   const int capacity;
+  NodeType type;
+  int currentLoad = 0; // default member initializer
+};
+
+struct AgentNode {
+  const int globalID;
+  const int localID;
+  NodeType type;
 };
 
 
 class SpatialGraph {
   private:
     std::vector<std::vector<Edge>> adjacencyList; // adjacencyList: Nodes as vectors of Edges
-    std::vector<Node> nodeData; // this list stores each nodes location Data 
+    std::vector<WorldNode> nodeData; // this list stores each nodes location Data 
     
   public:
-    int addNode(NodeType type); // returns the new node's ID
-    void addEdge(int from, int to, double distance, EdgeType type);
-    // void traverseEdge(int fromNodeID, int toNodeID);
-    // void visitNode(int nodeID);
+    // Graph creation functions: used for explicit set-up of world graph
+    int addNode(NodeType type, int capacity); // returns the new node's ID
+    void addEdge(int from, int to, double distance, EdgeType type);   
+
+    // This function is for agents that percieve the surroundings of a node
+    std::vector<Edge> getEdges(int nodeID);
+    WorldNode& getNode(int nodeID);
+     
+    // testing and debugging
     void printGraph();
+};
+
+
+
+class AgentGraph {
+  private:
+    std::vector<std::vector<Edge>> adjacencyList;
+    std::vector<AgentNode> nodeData;
+
+  public:
+    void mapSurroundings (WorldNode location, SpatialGraph& world, int perceptionEffort);
 };
