@@ -29,13 +29,6 @@ struct WorldNode {
   int currentLoad = 0; // default member initializer
 };
 
-struct AgentNode {
-  const int globalID;
-  const int localID;
-  NodeType type;
-};
-
-
 class SpatialGraph {
   private:
     std::vector<std::vector<Edge>> adjacencyList; // adjacencyList: Nodes as vectors of Edges
@@ -52,15 +45,4 @@ class SpatialGraph {
      
     // testing and debugging
     void printGraph();
-};
-
-
-
-class AgentGraph {
-  private:
-    std::vector<std::vector<Edge>> adjacencyList;
-    std::vector<AgentNode> nodeData;
-
-  public:
-    void mapSurroundings (WorldNode location, SpatialGraph& world, int perceptionEffort);
 };

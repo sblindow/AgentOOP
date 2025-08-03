@@ -52,37 +52,3 @@ void SpatialGraph::printGraph(){
     std::cout << std::endl;
   }
 }
-
-// Agent Graph
-void AgentGraph::mapSurroundings(WorldNode currentLocation, SpatialGraph& world, int perceptionEffort){
-  int effort = perceptionEffort;
-  
-    
-    int newLocalID = adjacencyList.size(); // index of new node in agentGraph
-
-    AgentNode newNode{currentLocation.nodeID, newLocalID, currentLocation.type};
-
-    
-
-    adjacencyList.push_back(world.getEdges(currentLocation.nodeID));
-  
-    nodeData.push_back(newNode);
-    
-    effort -= 1;
-
-  if (effort > 0){
-    // randomly choose one node to investigate
-    int upperBound = adjacencyList[newLocalID].size() - 1; // number of edges on that node
-
-    // generate a random number between 0 and rngBase
-    std::srand(std::time(0)); //seed the random number generator 
-    int randomNum = std::rand() % (upperBound + 1); // generates a number between 0 and upperBound
-
-   // recursive function call of map Surroundings
-   AgentGraph::mapSurroundings(world.getNode())
-     
-  }
-  
-  return;
-}
-
