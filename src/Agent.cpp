@@ -17,7 +17,7 @@ void Agent::evaluateNeeds(){
 }
 
 void Agent::percieve(){
-  graph.addNode(worldGraph )
+
 }
 
 void Agent::process(){
