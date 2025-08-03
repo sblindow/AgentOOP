@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-int main(){
+int main(void){
   // Create a graph object
   SpatialGraph graph;
 

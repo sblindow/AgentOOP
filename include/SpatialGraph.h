@@ -4,12 +4,15 @@
 
 enum class EdgeType {
   FOOTPATH,
-  ELEVATOR
+  ELEVATOR,
+  STAIRWAY
 };
 
 enum class NodeType{
   INTERSECTION,
-  LOCATION
+  HOME,
+  SHOP,
+  WORKPLACE
 };
 
 struct Edge {
@@ -20,8 +23,10 @@ struct Edge {
 };
 
 struct Node {
-  NodeType type;
   const int nodeID;
+  NodeType type;
+  int currentLoad;
+  const int capacity;
 };
 
 

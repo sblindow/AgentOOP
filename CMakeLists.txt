@@ -25,8 +25,6 @@ target_sources(${LIBNAME}
 
   # include targets
   include/SpatialGraph.h
-  include/AgentGraph.h
-  include/WorldGraph.h
   include/Agent.h
 )
 
