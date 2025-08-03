@@ -4,6 +4,7 @@
 // #include <cstdlib>
 // #include <ctime>
 # include <algorithm>
+#include <new>
 
 int AgentGraph::addWorldNode(WorldNode& worldNode){
   int newNodeID = adjacencyList.size();
@@ -41,31 +42,40 @@ float AgentGraph::familiarity(WorldNode& currentLocation){
     
 }
 
-void AgentGraph::mapSurroundings(WorldNode& currentLocation, SpatialGraph& world, int perceptionEffort){
-  std::vector<int> newNodes; // create empty vector that will contain the indices of new nodes.
-   
-  newNodes.push_back(addWorldNode(currentLocation)); // adds world node of current location to the agent graph
-
-  std::vector<Edge> newEdges = world.getEdges(currentLocation.nodeID); // vector of all nodes connected to world location node
+int AgentGraph::findLocalID(int worldID){ // returns -1 when node is not found
+  auto iterator = std::find_if(
+    nodeData.begin(), nodeData.end(),
+    [&](const AgentNode& a) {return a.globalID == worldID;}
+  );
   
-  for(int i = 0; i < newEdges.size(); i++){ // for each Edge connected to the current world node
-    WorldNode iTargetNode = world.getNode(newEdges[i].targetNode);  
-    newNodes.push_back(addWorldNode(iTargetNode));
+  if(iterator != nodeData.end()){
+    std::size_t index = std::distance(nodeData.begin(), iterator);
+    return nodeData[index].localID;
   }
 
-  int nodesAdded = newNodes.size();
+  return -1;
+}
 
-  // add Edges between all new nodes with correct AgentGraph indices
-  for(int i = 1; i < nodesAdded; i++){
-    Edge iWorldEdge = newEdges[i-1];
-    addEdge(newNodes[0],newNodes[i],iWorldEdge.distance, iWorldEdge.type);
+void AgentGraph::mapSurroundings(WorldNode& currentLocation, SpatialGraph& world, int perceptionEffort){
+  int currentLocalID;
+  
+  // Handle current location
+  if(familiarity(currentLocation) == 0){ // if the current node is unknown to the Agent
+    currentLocalID = addWorldNode(currentLocation); // add it to the agent graph
+  } else { // if the current node is known, we still need to know the localID to add new connections
+    currentLocalID = findLocalID(currentLocation.nodeID);
   }
 
-  // set Node familiarities
-  for(int i = 0; i < nodesAdded; i++){
-    nodeData[newNodes[i]].familiarity = world.getEdges(currentLocation.nodeID).size() / adjacencyList[newNodes[i]].size();
-  }
-
-  return;
+  // find unknown Neighbors
+  std::vector<Edge> neighbors = world.getEdges(currentLocation.nodeID);
+  
+  for(int i = 0; i < neighbors.size(); i++){
+    const Edge& edge = neighbors[i];
+    WorldNode& targetNode = world.getNode(edge.targetNode);
+    if(familiarity(targetNode) == 0){
+      int targetLocalID = addWorldNode(targetNode);
+      addEdge(currentLocalID, targetLocalID, edge.distance, edge.type);
+    }
+  }    
 }
 

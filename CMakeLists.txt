@@ -21,10 +21,12 @@ target_sources(${LIBNAME}
   PRIVATE
   # src targets
   src/Agent.cpp
+  src/AgentGraph.cpp
   src/SpatialGraph.cpp
 
   # include targets
   include/SpatialGraph.h
+  include/AgentGraph.h
   include/Agent.h
 )
 

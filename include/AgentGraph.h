@@ -20,6 +20,7 @@ class AgentGraph {
     int addWorldNode(WorldNode& worldNode);
     void addEdge(int from, int to, double distance, EdgeType type);
     float familiarity(WorldNode& currentLocation);
+    int findLocalID(int worldID);
 
   public:
     void mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);
