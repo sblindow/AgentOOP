@@ -4,7 +4,6 @@
 // #include <cstdlib>
 // #include <ctime>
 # include <algorithm>
-#include <new>
 
 int AgentGraph::addWorldNode(WorldNode& worldNode){
   int newNodeID = adjacencyList.size();
@@ -26,6 +25,7 @@ void AgentGraph::addEdge(int from, int to, double distance, EdgeType type){
 
 float AgentGraph::familiarity(WorldNode& currentLocation){
   // search for currentLocation in Agent nodeData
+  // can optimize/ refactor for better performance 
   auto iterator = std::find_if(
     nodeData.begin(), nodeData.end(),
     [&](const AgentNode& a) {return a.globalID == currentLocation.nodeID;}
@@ -43,6 +43,7 @@ float AgentGraph::familiarity(WorldNode& currentLocation){
 }
 
 int AgentGraph::findLocalID(int worldID){ // returns -1 when node is not found
+  // can optimize/ refactor for better performance 
   auto iterator = std::find_if(
     nodeData.begin(), nodeData.end(),
     [&](const AgentNode& a) {return a.globalID == worldID;}
