@@ -9,6 +9,7 @@ struct AgentNode {
   const int globalID;
   const int localID;
   NodeType type;
+  float familiarity;
 };
 
 class AgentGraph {
@@ -18,6 +19,7 @@ class AgentGraph {
     
     int addWorldNode(WorldNode& worldNode);
     void addEdge(int from, int to, double distance, EdgeType type);
+    float familiarity(WorldNode& currentLocation);
 
   public:
     void mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);

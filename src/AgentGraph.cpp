@@ -3,6 +3,7 @@
 // #include <iostream>
 // #include <cstdlib>
 // #include <ctime>
+# include <algorithm>
 
 int AgentGraph::addWorldNode(WorldNode& worldNode){
   int newNodeID = adjacencyList.size();
@@ -22,11 +23,27 @@ void AgentGraph::addEdge(int from, int to, double distance, EdgeType type){
   return;  
 }
 
+float AgentGraph::familiarity(WorldNode& currentLocation){
+  // search for currentLocation in Agent nodeData
+  auto iterator = std::find_if(
+    nodeData.begin(), nodeData.end(),
+    [&](const AgentNode& a) {return a.globalID == currentLocation.nodeID;}
+  );
 
+  if(iterator != nodeData.end()){
+    // found --> determine which element has been found
+    std::size_t index = std::distance(nodeData.begin(), iterator);
+    // index is the zero-based position of the matching element
+    return nodeData[index].familiarity;
+  }
+
+  return 0;
+    
+}
 
 void AgentGraph::mapSurroundings(WorldNode& currentLocation, SpatialGraph& world, int perceptionEffort){
   std::vector<int> newNodes; // create empty vector that will contain the indices of new nodes.
-  
+   
   newNodes.push_back(addWorldNode(currentLocation)); // adds world node of current location to the agent graph
 
   std::vector<Edge> newEdges = world.getEdges(currentLocation.nodeID); // vector of all nodes connected to world location node
@@ -42,6 +59,11 @@ void AgentGraph::mapSurroundings(WorldNode& currentLocation, SpatialGraph& world
   for(int i = 1; i < nodesAdded; i++){
     Edge iWorldEdge = newEdges[i-1];
     addEdge(newNodes[0],newNodes[i],iWorldEdge.distance, iWorldEdge.type);
+  }
+
+  // set Node familiarities
+  for(int i = 0; i < nodesAdded; i++){
+    nodeData[newNodes[i]].familiarity = world.getEdges(currentLocation.nodeID).size() / adjacencyList[newNodes[i]].size();
   }
 
   return;
