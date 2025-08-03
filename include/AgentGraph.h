@@ -20,5 +20,5 @@ class AgentGraph {
     void addEdge(int from, int to, double distance, EdgeType type);
 
   public:
-    void mapSurroundings (WorldNode location, SpatialGraph& world, int perceptionEffort);
+    void mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);
 };
