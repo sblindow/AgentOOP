@@ -125,3 +125,26 @@ std::vector<int> AgentGraph::shortestPath(int start, int goal) const {
   std::reverse(path.begin(), path.end());
   return path;
 }
+
+int AgentGraph::getLocalID(int globalID) const {
+  // Const version of findLocalID
+  auto iterator = std::find_if(
+    nodeData.begin(), nodeData.end(),
+    [&](const AugentNode& a) {return a.globalID == globalID;}
+  );
+
+  if(iterator != nodeData.end()){
+    std::size_t index = std::distance(nodeData.begin(), iterator);
+    return nodeData[index].localID;
+  }
+
+  return -1;
+}
+
+std::vector<AgentNode> AgentGraph::getKnownNodes() const {
+  return nodeData;
+}
+
+size_t AgentGraph::getNodeCount() const {
+  return nodeData.size();
+}

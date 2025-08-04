@@ -53,8 +53,9 @@ private:
   void sleep();
 
   // helper functions
-  void planPathTo(int targetNode);
-  int findNearestNodeType(NodeType targetType);
+  // void planPathTo(int targetNode);
+  std::vector<int> pathToNearestNodeType(NodeType targetType);
+  std::vector<int> pathToKnownNode(int localTargetID);
   void updateTimers();
 
   // basic state

@@ -26,6 +26,12 @@ class AgentGraph {
     int mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);
     NodeType getLocalType(int localNodeID);
 
-    //
-    std::vector<int> shortestPath (int start, int goal) const;       
+    // Pathfinding via dijkstras algortihm
+    std::vector<int> shortestPath (int start, int goal) const;
+
+    // getter functions for agent decision making
+    int getGlobalID(int localID) const;
+    int getLocalID(int globalID) const;
+    std::vector<AgentNode> getKnownNodes() const;
+    size_t getNodeCount() const;
 };

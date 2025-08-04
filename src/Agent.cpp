@@ -117,7 +117,10 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
         currentActivity = Activity::EATINGIN;
         activityTimer = 2; // eating in takes more time for preparation, but is more efficient with ressources
       } else { // agent has food at home but is out and about
-        planPathTo(homeLocation);
+        if(!pathToTarget.empty()){
+          pathToTarget = graph.shortestPath(localPosition, homeLocation);
+        }
+        move();
       }     
       break;
 
@@ -127,19 +130,24 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
         currentActivity = Activity::SLEEPING;
         activityTimer = 8; // sleep for 8 hours
       }else{
-        planPathTo(homeLocation);
+        if(!pathToTarget.empty()){
+          pathToTarget = graph.shortestPath(localPosition, homeLocation);
+        }
+        move();
       }
       break;
 
     // BUY_FOOD
     case Goal::BUY_FOOD:
       {
-        int shopLocation = findNearestNodeType(NodeType::SHOP);
         if(graph.getLocalType(localPosition) == NodeType::SHOP){
           currentActivity = Activity::SHOPPING;
           activityTimer = 1; // It takes an hour to shop for something
         }else{
-          planPathTo(shopLocation);
+          if(!pathToTarget.empty()){
+            pathToTarget = pathToNearestNodeType(NodeType::SHOP);
+          }
+          move();
         }
       }
       break;
@@ -147,12 +155,14 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
     // WORK
     case Goal::WORK:
       {
-        int workLocation = findNearestNodeType(NodeType::SHOP);
         if(graph.getLocalType(localPosition) == NodeType::WORKPLACE){
           currentActivity = Activity::WORKING;
           activityTimer = 2; // The agent works 2 hours at a time
         }else{
-          planPathTo(workLocation);
+          if(!pathToTarget.empty()){
+            pathToTarget = pathToNearestNodeType(NodeType::WORKPLACE);
+          }
+          move();
         }
       }
       break;
@@ -160,9 +170,29 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
   }
 }
 
-void Agent::planPathTo(int targetNode){
-  // Simple pathfinding using agents known graph
+
+std::vector<int> Agent::pathToNearestNodeType(NodeType targetType){
+  // search through agent's known nodes for nearest target type
+  int bestDistance = std::numeric_limits<int>::max();
+  std::vector<int> bestPath {};
+
+  // Get all knwn nodes from agent's graph
+  std::vector<AgentNode> knownNodes = graph.getKnownNodes();
+
+  // Check all known nodes for targetType
+  for(const auto& node : knownNodes){
+    if(node.type == targetType){
+      // calculate path length to this node
+      std::vector<int> path = graph.shortestPath(localPosition, node.localID);
+      if(!path.empty() && static_cast<int>(path.size()) < bestDistance){
+        bestDistance = path.size();
+        bestPath = path;
+      }
+    }
+  }
+  return bestPath; //returs quickest path to nearest node Type 
 }
+
 
 void Agent::move(){
   // movement along planned path
