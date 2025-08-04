@@ -17,10 +17,12 @@ enum class Goal {
 enum class Activity {
   IDLE,
   MOVING,
-  EATING,
+  EATINGOUT,
+  EATINGIN,
   SLEEPING,
   SHOPPING,
-  WORKING
+  WORKING,
+  EXPLORING
 };
 
 
@@ -35,6 +37,7 @@ public:
 
   SpatialGraph& worldGraph;
   int worldPosition;
+  int localPosition;
 
   void tick(); // this is the simulation method that defines what an agent does every tick
   
@@ -75,4 +78,5 @@ private:
   
   // knowledge
   AgentGraph graph; // Agents idiosyncratic knowledge about the world
+  // here I could add a std::vector<std::vector<int>> that saves the n most used paths the agent takes over time
 };

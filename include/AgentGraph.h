@@ -23,5 +23,9 @@ class AgentGraph {
     int findLocalID(int worldID);
 
   public:
-    void mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);
+    int mapSurroundings (WorldNode& location, SpatialGraph& world, int perceptionEffort);
+    NodeType getLocalType(int localNodeID);
+
+    //
+    std::vector<int> shortestPath (int start, int goal) const;       
 };

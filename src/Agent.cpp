@@ -1,6 +1,9 @@
 #include "Agent.h"
 #include "SpatialGraph.h"
 
+#include <iostream>
+
+
 namespace sleepConst {
   constexpr std::chrono::hours wakeUp {6};
   constexpr std::chrono::hours sleep {22};
@@ -17,6 +20,7 @@ Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, int iD, std::str
   , agentName {name}
   , worldGraph {world}
   , worldPosition {home}
+  , localPosition {}
   , ticksAwake {0}
   , hoursAwake {static_cast<int>(
       (timeOfDay >= sleepConst::wakeUp && timeOfDay < sleepConst::sleep)
@@ -38,23 +42,155 @@ Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, int iD, std::str
 {
   // initialize Agents perception of starting location
   WorldNode& startNode = worldGraph.getNode(worldPosition); // get reference to start position world node
-  graph.mapSurroundings(startNode, worldGraph, 3); // map surroundings with initial perception effort of 3
+  localPosition = graph.mapSurroundings(startNode, worldGraph, 3); // map surroundings with initial perception effort of 3
 }
 
-void Agent::evaluateNeeds(){
-  
+void Agent::evaluateNeeds(){ // Agent evaluatesNeeds and sets a Goal based on a need hierarchy
+  // basic needs hierarchy: critical -> secondary -> comfort
+
+  // critical needs: immediate action required
+  if(hunger > 80){
+    currentGoal = Goal::EAT;
+    return;
+  }
+
+  if(energy < 20){
+    currentGoal = Goal::SLEEP;
+    return;
+  }
+
+  // secondary needs
+  if(hunger > 50 && foodCarrying+foodFridge == 0){
+    currentGoal = Goal::BUY_FOOD;
+    return;
+  }
+
+  if(money < 20){
+    currentGoal = Goal::WORK;
+    return;
+  }
+
+  // comfort & routine needs
+  if(energy < 60 && hoursAwake > 16){
+    currentGoal = Goal::SLEEP;
+    return;
+  }
+
+  if(hunger > 30){
+    currentGoal = (foodCarrying+foodFridge > 0)? Goal::EAT : Goal::BUY_FOOD;
+    return;
+  }
 }
 
-void Agent::percieve(){
+void Agent::percieve(){ // Agents perceive their surroundings and update their mental map
+  WorldNode& currentNode = worldGraph.getNode(worldPosition);
 
+  // perception effort depends on familiarity with the node and energy
+  int perceptionEffort = std::max(1, energy / 20);
+
+  // map surroundings to agents personal graph
+  graph.mapSurroundings(currentNode, worldGraph, perceptionEffort);
+
+  // update load information of current node
+  currentNode.currentLoad++; // Agent occupies space on the node
 }
 
-void Agent::process(){
-  
+void Agent::process(){ // Decision making: decide on actions and plan paths based on Goals
+  evaluateNeeds();
+
+  switch(currentGoal){
+    // NONE
+    case Goal::NONE:
+      currentActivity = Activity::IDLE;
+      break;
+      
+    // EAT  
+    case Goal::EAT: // can eat at the shop or at home, when carrying food or something is in the fridge
+      // if there is no food at home or on the person, the agent needs to buy some
+      if(foodCarrying == 0 && foodFridge == 0){
+        currentGoal = Goal::BUY_FOOD;
+      } else if (foodCarrying > 0 && graph.getLocalType(localPosition) == NodeType::SHOP){
+        // just bought food, agent is at the shop, they can eat it right there. It's a mall type situation. Ramen noodles
+        currentActivity = Activity::EATINGOUT;
+        activityTimer = 1; // agent spends one hour at the shop enjoing their fresh meal
+      } else if (foodFridge > 0 && graph.getLocalType(localPosition) == NodeType::HOME){
+        currentActivity = Activity::EATINGIN;
+        activityTimer = 2; // eating in takes more time for preparation, but is more efficient with ressources
+      } else { // agent has food at home but is out and about
+        planPathTo(homeLocation);
+      }     
+      break;
+
+    // SLEEP
+    case Goal::SLEEP:
+      if(graph.getLocalType(localPosition) == NodeType::HOME){
+        currentActivity = Activity::SLEEPING;
+        activityTimer = 8; // sleep for 8 hours
+      }else{
+        planPathTo(homeLocation);
+      }
+      break;
+
+    // BUY_FOOD
+    case Goal::BUY_FOOD:
+      {
+        int shopLocation = findNearestNodeType(NodeType::SHOP);
+        if(graph.getLocalType(localPosition) == NodeType::SHOP){
+          currentActivity = Activity::SHOPPING;
+          activityTimer = 1; // It takes an hour to shop for something
+        }else{
+          planPathTo(shopLocation);
+        }
+      }
+      break;
+
+    // WORK
+    case Goal::WORK:
+      {
+        int workLocation = findNearestNodeType(NodeType::SHOP);
+        if(graph.getLocalType(localPosition) == NodeType::WORKPLACE){
+          currentActivity = Activity::WORKING;
+          activityTimer = 2; // The agent works 2 hours at a time
+        }else{
+          planPathTo(workLocation);
+        }
+      }
+      break;
+      
+  }
+}
+
+void Agent::planPathTo(int targetNode){
+  // Simple pathfinding using agents known graph
 }
 
 void Agent::move(){
-  
+  // movement along planned path
+  if(! pathToTarget.empty() && currentActivity == Activity::MOVING){
+    int nextNode = pathToTarget.front();
+    pathToTarget.erase(pathToTarget.begin());
+
+    // check if the target node has capacity
+    WorldNode& targetNode = worldGraph.getNode(nextNode);
+    if(targetNode.currentLoad < targetNode.capacity){
+      // update occupancy
+      worldGraph.getNode(worldPosition).currentLoad--;
+      worldPosition = nextNode;
+      targetNode.currentLoad++;
+
+      // movement costs Energy
+      energy = std::max(0, energy-2);
+
+      // debugging & test
+      std::cout << agentName << " moved to node " << worldPosition << std::endl;
+      } else {
+        // Target is full, wait or find alternative
+        std::cout << agentName << " waiting - target location full" << std::endl;
+      }
+    if(pathToTarget.empty()){
+      currentActivity = Activity::IDLE;
+    }
+  }
 }
 
 void Agent::work(){
