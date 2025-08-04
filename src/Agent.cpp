@@ -238,3 +238,15 @@ void Agent::eat(){
 void Agent::sleep(){
   
 }
+
+void Agent::explore(){
+  
+}
+
+void Agent::updateTimers(){
+  
+}
+
+void Agent::tick(){
+  
+}

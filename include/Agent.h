@@ -51,6 +51,7 @@ private:
   void buy();
   void eat();
   void sleep();
+  void explore();
 
   // helper functions
   // void planPathTo(int targetNode);
