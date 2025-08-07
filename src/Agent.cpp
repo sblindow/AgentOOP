@@ -11,7 +11,7 @@ namespace sleepConst {
 
 namespace simulationConst {
   constexpr int ticksPerHour {60}; // I will need to run multiple ticks per hour, because most actions don't take a full 60 Minutes
-  constexpr int energyLoss {2};
+  constexpr double energyLoss {2.0};
 }
 
 // constructor
@@ -28,7 +28,7 @@ Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, int iD, std::str
       : std::chrono::hours {0}.count())
     } // Agents get up at 6AM by default
   , hunger {20} // start with some hunger
-  , energy {static_cast<double>(100 - hoursAwake * simulationConst::energyLoss)} // energy depends on hours awake and hourly energy loss
+  , energy {100 - hoursAwake * simulationConst::energyLoss} // energy depends on hours awake and hourly energy loss
   , currentGoal {Goal::NONE}
   , targetLocation {-1}
   , pathToTarget {}
@@ -117,7 +117,8 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
         currentActivity = Activity::EATINGIN;
         activityTimer = 2; // eating in takes more time for preparation, but is more efficient with ressources
       } else { // agent has food at home but is out and about
-        if(!pathToTarget.empty()){
+        currentActivity = Activity::MOVING;
+        if(pathToTarget.empty()){
           pathToTarget = graph.shortestPath(localPosition, homeLocation);
         }
         move();
@@ -130,7 +131,8 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
         currentActivity = Activity::SLEEPING;
         activityTimer = 8; // sleep for 8 hours
       }else{
-        if(!pathToTarget.empty()){
+        currentActivity = Activity::MOVING;
+        if(pathToTarget.empty()){
           pathToTarget = graph.shortestPath(localPosition, homeLocation);
         }
         move();
@@ -144,7 +146,8 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
           currentActivity = Activity::SHOPPING;
           activityTimer = 1; // It takes an hour to shop for something
         }else{
-          if(!pathToTarget.empty()){
+          currentActivity = Activity::MOVING;
+          if(pathToTarget.empty()){
             pathToTarget = pathToNearestNodeType(NodeType::SHOP);
           }
           move();
@@ -159,7 +162,8 @@ void Agent::process(){ // Decision making: decide on actions and plan paths base
           currentActivity = Activity::WORKING;
           activityTimer = 2; // The agent works 2 hours at a time
         }else{
-          if(!pathToTarget.empty()){
+          currentActivity = Activity::MOVING;
+          if(pathToTarget.empty()){
             pathToTarget = pathToNearestNodeType(NodeType::WORKPLACE);
           }
           move();
@@ -209,7 +213,7 @@ void Agent::move(){
       targetNode.currentLoad++;
 
       // movement costs Energy
-      energy = std::max(0, static_cast<int>(energy-2));
+      energy = std::max(0.0, energy-2.0);
 
       // debugging & test
       std::cout << agentName << " moved to node " << worldPosition << std::endl;
@@ -233,7 +237,7 @@ void Agent::work(){
    hunger = hunger + (5.0/ticks);
 
    // per hour: 12 money
-   money = money + (5.0/ticks);
+   money = money + (12.0/ticks);
 
    // logic for activity timer:
    // The agent should adhere to a minium time per activity
