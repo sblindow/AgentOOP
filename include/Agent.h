@@ -62,8 +62,8 @@ private:
   // basic state
   int ticksAwake;
   int hoursAwake;
-  int hunger;
-  int energy;
+  double hunger;
+  double energy;
 
   // Goal and Activity tracking
   Goal currentGoal;

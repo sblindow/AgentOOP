@@ -10,7 +10,7 @@ namespace sleepConst {
 }
 
 namespace simulationConst {
-  constexpr int hoursPerTick {1};
+  constexpr int ticksPerHour {60}; // I will need to run multiple ticks per hour, because most actions don't take a full 60 Minutes
   constexpr int energyLoss {2};
 }
 
@@ -28,7 +28,7 @@ Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, int iD, std::str
       : std::chrono::hours {0}.count())
     } // Agents get up at 6AM by default
   , hunger {20} // start with some hunger
-  , energy {100 - hoursAwake * simulationConst::energyLoss} // energy depends on hours awake and hourly energy loss
+  , energy {static_cast<double>(100 - hoursAwake * simulationConst::energyLoss)} // energy depends on hours awake and hourly energy loss
   , currentGoal {Goal::NONE}
   , targetLocation {-1}
   , pathToTarget {}
@@ -86,7 +86,7 @@ void Agent::percieve(){ // Agents perceive their surroundings and update their m
   WorldNode& currentNode = worldGraph.getNode(worldPosition);
 
   // perception effort depends on familiarity with the node and energy
-  int perceptionEffort = std::max(1, energy / 20);
+  int perceptionEffort = std::max(1, static_cast<int>(energy / 20));
 
   // map surroundings to agents personal graph
   graph.mapSurroundings(currentNode, worldGraph, perceptionEffort);
@@ -209,7 +209,7 @@ void Agent::move(){
       targetNode.currentLoad++;
 
       // movement costs Energy
-      energy = std::max(0, energy-2);
+      energy = std::max(0, static_cast<int>(energy-2));
 
       // debugging & test
       std::cout << agentName << " moved to node " << worldPosition << std::endl;
@@ -224,7 +224,22 @@ void Agent::move(){
 }
 
 void Agent::work(){
-  
+   // how much energy is spent and how much hunger is accrued depends on the tick-rate
+   double ticks = static_cast<double>(simulationConst::ticksPerHour);
+   
+   // per hour: 5 energy
+   energy = energy - (5.0/ticks);
+   // per hour: 5 hunger
+   hunger = hunger + (5.0/ticks);
+
+   // per hour: 12 money
+   money = money + (5.0/ticks);
+
+   // logic for activity timer:
+   // The agent should adhere to a minium time per activity
+   // but they should also keep evaluating their needs
+   // if critical needs come up, the agent should abandon their activity
+   // There should also be a system that lets agents spend longer working, if all needs are met and they are inclinded to do so   
 }
 
 void Agent::buy(){
