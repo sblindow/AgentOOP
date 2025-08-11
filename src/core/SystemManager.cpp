@@ -6,15 +6,6 @@
 
 class SystemManager {
   private:
-    // type -> system id
-    std::unordered_map<const char*, SystemTypeID> typeToID;
-    // system id -> system instance
-    std::unordered_map<SystemTypeID, std::shared_ptr<ISystem>> systemsByID;
-    // system id -> required signature
-    std::unordered_map<SystemTypeID, Signature> signatures;
-
-    SystemTypeID nextID{0};
-
     struct SystemEntry {
       std::unique_ptr<ISystem> system;
       float lastRunTime = 0.0f;
