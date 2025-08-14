@@ -6,7 +6,7 @@
 
 class EntityManager {
   private:
-    int32_t nextID = 0;
+    uint32_t nextID = 0;
     std::vector<bool> state;
 
   public:

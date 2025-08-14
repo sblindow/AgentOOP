@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SpatialGraph.h"
-#include "AgentGraph.h"
+#include "graphs/SpatialGraph.hpp"
+#include "agents/AgentGraph.hpp"
 
 #include <string>
 #include <chrono>
@@ -30,9 +30,9 @@ enum class Activity {
 // Agent Class
 class Agent{
 public:
-  Agent(SpatialGraph& worldGraph, std::chrono::hours timeOfDay, int iD, std::string name, int home);
+  Agent(SpatialGraph& worldGraph, std::chrono::hours timeOfDay, uint32_t iD, std::string name, int home);
   
-  const int agentID;
+  const uint32_t entityID;
   const std::string agentName;
 
   SpatialGraph& worldGraph;

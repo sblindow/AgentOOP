@@ -1,4 +1,4 @@
-#include "AgentGraph.h"
+#include "agents/AgentGraph.hpp"
 
 // #include <iostream>
 // #include <cstdlib>
@@ -130,7 +130,7 @@ int AgentGraph::getLocalID(int globalID) const {
   // Const version of findLocalID
   auto iterator = std::find_if(
     nodeData.begin(), nodeData.end(),
-    [&](const AugentNode& a) {return a.globalID == globalID;}
+    [&](const AgentNode& a) {return a.globalID == globalID;}
   );
 
   if(iterator != nodeData.end()){

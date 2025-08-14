@@ -15,7 +15,10 @@ set(LIBNAME "agentlib")
 
 add_library(${LIBNAME} SHARED)
 
-target_include_directories(${LIBNAME} PUBLIC include)
+target_include_directories(${LIBNAME} PUBLIC
+   include
+   src
+)
 
 target_sources(${LIBNAME}
   PRIVATE

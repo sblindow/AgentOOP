@@ -1,4 +1,6 @@
-#include "SpatialGraph.h"
+#pragma once
+
+#include "graphs/SpatialGraph.hpp"
 
 #include <iostream>
 #include <cstdlib>

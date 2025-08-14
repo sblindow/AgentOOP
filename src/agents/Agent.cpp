@@ -1,5 +1,5 @@
-#include "Agent.h"
-#include "SpatialGraph.h"
+#include "agents/Agent.hpp"
+#include "graphs/SpatialGraph.hpp"
 
 #include <iostream>
 
@@ -15,8 +15,8 @@ namespace simulationConst {
 }
 
 // constructor
-Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, int iD, std::string name, int home)
-  : agentID {iD}
+Agent::Agent(SpatialGraph& world, std::chrono::hours timeOfDay, uint32_t iD, std::string name, int home)
+  : entityID {iD}
   , agentName {name}
   , worldGraph {world}
   , worldPosition {home}

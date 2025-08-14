@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ComponentManager.cpp"
+#include "core/ComponentManager.cpp"
 
 #include <bitset>
 

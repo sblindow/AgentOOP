@@ -1,4 +1,4 @@
-#include "SpatialGraph.h"
+#include "graphs/SpatialGraph.hpp"
 
 #include <iostream>
 
