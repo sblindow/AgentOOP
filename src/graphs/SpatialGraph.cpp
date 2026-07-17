@@ -1,4 +1,3 @@
-#pragma once
 
 #include "graphs/SpatialGraph.hpp"
 

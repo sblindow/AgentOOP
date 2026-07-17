@@ -1,10 +1,3 @@
-// the component manager handles:
-// registering new component types
-// storage for each component type
-// add component to entity index mapping
-// get component from entity
-// remove component
-
 # pragma once
 
 # include <cstdint>
@@ -77,7 +70,7 @@ class ComponentManager {
   };
 
   private:
-    // here we can initialize the map without knowing the types by using IComponentArray*
+    // here we can initialize the map without knowing the types by using std::unique_ptr<IComponentArray>
     std::unordered_map<ComponentTypeID, std::unique_ptr<IComponentArray>> arrays;
     std::unordered_map<const char*, ComponentTypeID> typeToID;
     ComponentTypeID nextTypeID {0};

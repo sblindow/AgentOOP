@@ -2,7 +2,7 @@
 #include "graphs/SpatialGraph.hpp"
 
 #include <iostream>
-
+#include <limits>
 
 namespace sleepConst {
   constexpr std::chrono::hours wakeUp {6};
