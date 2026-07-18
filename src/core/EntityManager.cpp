@@ -6,31 +6,36 @@
 
 class EntityManager {
   private:
-    uint32_t nextID = 0;
-    std::vector<bool> state;
+    std::vector<uint32_t> freeIds;
+    std::vector<bool> idState;
 
   public:
-    uint32_t addID (){
-      uint32_t ID = nextID;
-      nextID++;
+    
+    uint32_t registerEntity (){
 
-      // resize state vector to fit ID
-      if (ID >= state.size()){
-        state.resize(ID + 1);
+      uint32_t Id = 0;
+
+      if (freeIds.empty()) {
+        Id = idState.size();
+        idState.resize(Id + 1);
+      } else {
+        Id = freeIds.back();
+        freeIds.pop_back();
       }
-      
-      state[ID] = true;
-      return ID;
+            
+      idState[Id] = true;
+      return Id;
     }
 
-    void deleteID (uint32_t dlt){
-      if (dlt < state.size()){
-        state[dlt] = 0;
+    void deleteEntity (uint32_t deleteId){
+      if (deleteId < idState.size() && idState[deleteId]){
+        idState[deleteId] = false;
+        freeIds.push_back(deleteId);
       }
     }
 
     bool isAlive(uint32_t id){
-      return id < state.size() && state[id];
+      return id < idState.size() && idState[id];
     }
 };
 
