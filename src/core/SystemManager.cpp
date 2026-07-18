@@ -2,28 +2,32 @@
 
 #include "core/System.hpp"
 
+#include <string>
 #include <typeinfo>
 
 class SystemManager {
+  
   private:
+    
     struct SystemEntry {
       std::unique_ptr<ISystem> system;
       float lastRunTime = 0.0f;
       float targetInterval;
     };
 
-    std::unordered_map<const char*, std::unique_ptr<SystemEntry>> systems;
+    std::unordered_map<std::type_index, std::unique_ptr<SystemEntry>> systems;
+    
     float currentTime = 0.0f;
 
     float getCurrentTime(){
-      // simple time tracking - could use chrono later for a real time implementation
-      return currentTime;
+      return currentTime; // simple time tracking - could use chrono later for a real time implementation
     }
     
   public:
     
     template<typename T>
     void registerSystem(){
+      
       const char* typeName = typeid(T).name();
 
       auto system = std::make_unique<T>();
@@ -39,6 +43,7 @@ class SystemManager {
 
     template<typename T>
     T* getSystem(){
+      
       const char* typeName = typeid(T).name();
       return static_cast<T*>(systems[typeName]->system.get());
     }
@@ -61,7 +66,7 @@ class SystemManager {
       }
     }
 
-    void update(float frameTime, ComponentManager& components){
+    void updateSystems(float frameTime, ComponentManager& components){
       currentTime += frameTime;
 
       for (auto& [name, entry] : systems) {
