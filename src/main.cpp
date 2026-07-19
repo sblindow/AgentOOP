@@ -61,6 +61,16 @@ static void UpdateCameraFPS(Camera *camera);
 static void UpdateBody(Body *body, float rot, char side, char forward, bool jumpPressed, bool crouchHold);
 
 
+// Draw game level
+
+static void DrawLevel(Model levelModel){
+
+  DrawModel(levelModel, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, GRAY);
+  DrawGrid(10,1.0f);
+
+  
+}
+
 //============================================================
 // Program main entry point
 //============================================================
@@ -93,6 +103,10 @@ int main (void)
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
   
   // ----------------------------------------------------
+  //
+  
+  Model levelModel = LoadModel("../assets/levelmesh.glb");
+
   
   // Main Game Loop
   
@@ -140,7 +154,7 @@ int main (void)
       ClearBackground(RAYWHITE);
 
       BeginMode3D(camera);
-          DrawLevel();
+          DrawLevel(levelModel);
       EndMode3D();
 
     EndDrawing();
@@ -262,14 +276,3 @@ static void UpdateCameraFPS(Camera *camera){
   camera->target = Vector3Add(camera->position, pitch);
 }
 
-// Draw game level
-
-static void DrawLevel(void){
-
-  Model levelModel = LoadModel("./assets/levelmesh.glb");
-
-  DrawModel(levelModel, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, WHITE);
-  DrawGrid(10,1.0f);
-
-  
-}
