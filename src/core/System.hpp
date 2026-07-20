@@ -14,9 +14,14 @@ using Signature = std::bitset<MAX_COMPONENTS>;
 
 // Base System Interface
 class ISystem {
+  protected:
+    ComponentManager& components; // Reference, not a pointer
+     
   public:
+    ISystem(ComponentManager& cm) : components(cm) {}
     virtual ~ISystem() = default;
-    virtual void update(float deltaTime, ComponentManager& components) = 0;
+    
+    virtual void update(float deltaTime) = 0;
     virtual int getTickRate() const = 0;
     virtual Signature getSignature() const = 0;
 

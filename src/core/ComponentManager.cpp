@@ -33,7 +33,7 @@ class ComponentManager {
       
       std::unordered_map<size_t, EntityID> indexToEntity; // maps the index of a component to a specific entity Id
       
-      size_t size = 0; // size variable of the components vector and the indexToEntity map.
+      //size_t size = 0; // size variable of the components vector and the indexToEntity map.
       
     public:
       
@@ -48,7 +48,9 @@ class ComponentManager {
       }
       
       T& getComponent(EntityID entity){
-        return components[entityToIndex[entity]]; 
+        auto it = entityToIndex.find(entity);
+        assert(it != entityToIndex.end() && "Entity has no such component!");
+        return components[it->second];
       }
       
       void removeEntity(EntityID entity) override { // overrides the pure virtual from the interface
@@ -70,30 +72,59 @@ class ComponentManager {
       }
   };
 
+  class ComponentTypeIndexGenerator {
+    inline static ComponentTypeIndex counter = 0;
+
+    public:
+      template<typename T>
+      static ComponentTypeIndex getIndex(){
+        static ComponentTypeIndex id = counter++; // pro T nur einmal initialisiert
+        return id;
+      }
+  };
+
   private:
     // here we can initialize the map without knowing the types by using std::unique_ptr<IComponentArray>
-    std::unordered_map<std::type_index, std::unique_ptr<IComponentArray>> componentArrays;   
-   
-    ComponentTypeIndex nextTypeId {0};
+    std::vector<std::unique_ptr<IComponentArray>> componentArraysVector;   
+
+
 
     // helper function
     template<typename T>
     ComponentArray<T>* getArray(){ // gets component array for registered component type
 
-      auto it = componentArrays.find(std::type_index(typeid(T)));
-      
-      assert(it != componentArrays.end() && "Component type not registered!"); // error
+      ComponentTypeIndex index = getComponentTypeId<T>();
 
-      return static_cast<ComponentArray<T>*>(it->second.get()); // cast from base pointer to specific type
+      assert(index < componentArraysVector.size() && componentArraysVector[index] != nullptr
+             && "Component type not registered!"); // bounds check, falls getComponentTypeId vor registerComponent aufgerufen wird
+            
+      return static_cast<ComponentArray<T>*>(componentArraysVector[index].get()); // cast from base pointer to specific type
       
-     }
-
+    }
+  
   public:
-    // register component type (create storage)
+
+    // helper function
     template<typename T>
-    void registerComponent(){
+    ComponentTypeIndex getComponentTypeId(){
+      return ComponentTypeIndexGenerator::getIndex<T>();
+    }
+    
+    // register component type (create storage) and return Index
+    template<typename T>
+    ComponentTypeIndex registerComponent(){
+
+      ComponentTypeIndex id = getComponentTypeId<T>(); // ID zuerst holen/erzeugen
       
-      componentArrays.insert({std::type_index(typeid(T)), std::make_unique<ComponentArray<T>>()});
+      if (id >= componentArraysVector.size()){
+        componentArraysVector.resize(id + 1); // Lücke bis zur ID auffüllen
+      }
+      
+      assert(componentArraysVector[id] == nullptr && "Component type already registered!");
+      
+      componentArraysVector[id] = std::make_unique<ComponentArray<T>>(); // Zuweisung auf angelegten Platz
+       
+      return id;
                     
     }
 
@@ -101,8 +132,7 @@ class ComponentManager {
     template<typename T>
     void addComponent(EntityID entity, T component){
       
-      ComponentArray<T>* array = getArray<T>(); // find the right wrapper for passed component
-      array->addComponent(entity, component); // call wrapper function addComponent and pass arguments
+      getArray<T>()->addComponent(entity, component); // call wrapper function addComponent and pass arguments
       
     }
 
@@ -115,8 +145,8 @@ class ComponentManager {
     }
 
     void entityDestroyed(EntityID entity) {
-      for (auto& pair : componentArrays) {
-        pair.second->removeEntity(entity);
+      for (auto& component : componentArraysVector) {
+        component->removeEntity(entity);
       }
     }
 
