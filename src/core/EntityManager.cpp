@@ -1,41 +1,28 @@
-#pragma once
+#include "core/EntityManager.hpp"
 
-#include <stdint.h>
-#include <vector>
+uint32_t EntityManager::registerEntity (){
+  uint32_t Id = 0;
 
-
-class EntityManager {
-  private:
-    std::vector<uint32_t> freeIds;
-    std::vector<bool> idState;
-
-  public:
+  if (freeIds.empty()) {
+    Id = idState.size();
+    idState.resize(Id + 1);
+  } else {
+    Id = freeIds.back();
+    freeIds.pop_back();
+  }
     
-    uint32_t registerEntity (){
+  idState[Id] = true;
+  return Id;
+  }
 
-      uint32_t Id = 0;
+void EntityManager::deleteEntity (uint32_t deleteId){
+  if (deleteId < idState.size() && idState[deleteId]){
+    idState[deleteId] = false;
+    freeIds.push_back(deleteId);
+  }
+}
 
-      if (freeIds.empty()) {
-        Id = idState.size();
-        idState.resize(Id + 1);
-      } else {
-        Id = freeIds.back();
-        freeIds.pop_back();
-      }
-            
-      idState[Id] = true;
-      return Id;
-    }
-
-    void deleteEntity (uint32_t deleteId){
-      if (deleteId < idState.size() && idState[deleteId]){
-        idState[deleteId] = false;
-        freeIds.push_back(deleteId);
-      }
-    }
-
-    bool isAlive(uint32_t id){
-      return id < idState.size() && idState[id];
-    }
-};
+bool EntityManager::isAlive(uint32_t id) const{
+  return id < idState.size() && idState[id];
+}
 

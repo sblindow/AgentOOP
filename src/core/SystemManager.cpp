@@ -1,81 +1,57 @@
 #pragma once
 
-#include "core/System.hpp"
+#include <core/SystemManager.hpp>
 
-#include <string>
-#include <typeinfo>
+namespace core{
 
-class SystemManager {
+  float SystemManager::getCurrentTime(){
+    return currentTime; // simple time tracking - could use chrono later for a real time implementation
+  }
+
+  template<typename T>
+  void SystemManager::registerSystem(ComponentManager& components){
   
-  private:
+    auto system = std::make_unique<T>(components); // Referenz wird durchgereicht
+  
+    float interval = 1.0f / system->getTickRate();
+
+    std::unique_ptr<SystemEntry> entry = std::make_unique<SystemEntry>();
+    entry->system = std::move(system);
+    entry->targetInterval = interval;
+    entry->sequencePos = systems.size(); // 0 indexed
+
+    systems.push_back(std::move(entry));
+  }
+
+  void SystemManager::entitySignatureChanged(EntityID entity, Signature newSignature){
+    // Check each system to see if entity should be added/removede
+    for (auto& entry : systems) {
     
-    struct SystemEntry {
-      std::unique_ptr<ISystem> system;
-      float lastRunTime = 0.0f;
-      float targetInterval;
-    };
-
-    std::unordered_map<std::type_index, std::unique_ptr<SystemEntry>> systems;
+      Signature systemSig = entry->system->getSignature();
     
-    float currentTime = 0.0f;
+      auto& entityList = entry->system->assignedEntities;
 
-    float getCurrentTime(){
-      return currentTime; // simple time tracking - could use chrono later for a real time implementation
-    }
-    
-  public:
-    
-    template<typename T>
-    void registerSystem(){
-      
-      const char* typeName = typeid(T).name();
+      bool shouldHaveEntity = (newSignature & systemSig) == systemSig;
+      bool hasEntity = std::find(entityList.begin(), entityList.end(), entity) != entityList.end();
 
-      auto system = std::make_unique<T>();
-      float interval = 1.0f / system->getTickRate();
-
-      auto entry = std::make_unique<SystemEntry>();
-      entry->system = std::move(system);
-      entry->targetInterval = interval;
-
-      systems[typeName] = std::move(entry);      
-    }
-
-
-    template<typename T>
-    T* getSystem(){
-      
-      const char* typeName = typeid(T).name();
-      return static_cast<T*>(systems[typeName]->system.get());
-    }
-
-
-    void entitySignatureChanged(EntityID entity, Signature newSignature){
-      // Check each system to see if entity should be added/removede
-      for (auto& [name, entry] : systems) {
-        Signature systemSig = entry->system->getSignature();
-        auto& entityList = entry->system->assignedEntities;
-
-        bool shouldHaveEntity = (newSignature & systemSig) == systemSig;
-        bool hasEntity = std::find(entityList.begin(), entityList.end(), entity) != entityList.end();
-
-        if (shouldHaveEntity && !hasEntity) {
-          entityList.push_back(entity);
-        } else if (!shouldHaveEntity && hasEntity){
-          entityList.erase(std::remove(entityList.begin(), entityList.end(), entity), entityList.end());
-        }
+      if (shouldHaveEntity && !hasEntity) {
+        entityList.push_back(entity);
+      } else if (!shouldHaveEntity && hasEntity){
+        entityList.erase(std::remove(entityList.begin(), entityList.end(), entity), entityList.end());
       }
     }
+  }
 
-    void updateSystems(float frameTime, ComponentManager& components){
-      currentTime += frameTime;
+  void SystemManager::updateSystems(float frameTime){
+    currentTime += frameTime;
 
-      for (auto& [name, entry] : systems) {
-        float timeSinceLastRun = currentTime - entry->lastRunTime;
+    for (auto& entry : systems) {
+      float timeSinceLastRun = currentTime - entry->lastRunTime;
 
-        if (timeSinceLastRun >= entry->targetInterval) {
-          entry->system->update(timeSinceLastRun, components);
-          entry->lastRunTime = currentTime;
-        }
+      if (timeSinceLastRun >= entry->targetInterval) {
+        entry->system->update(timeSinceLastRun);
+        entry->lastRunTime = currentTime;
       }
     }
-};
+  }
+}

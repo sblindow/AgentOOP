@@ -1,29 +1,33 @@
 #pragma once
 
-#include "core/ComponentManager.cpp"
+#include "core/ComponentManager.hpp"
 
 #include <bitset>
 
-// constants
-constexpr size_t MAX_COMPONENTS = 64; // maximum number of types supported 
+namespace core {
 
-// define more basic types for system structure
-using SystemTypeID = uint32_t;
-using Signature = std::bitset<MAX_COMPONENTS>;
+  // constants
+  constexpr size_t MAX_COMPONENTS = 64; // maximum number of types supported 
+
+  // define more basic types for system structure
+  using SystemTypeID = uint32_t;
+  using Signature = std::bitset<MAX_COMPONENTS>;
 
 
-// Base System Interface
-class ISystem {
-  protected:
-    ComponentManager& components; // Reference, not a pointer
+  // Base System Interface
+  class ISystem {
+    protected:
+      ComponentManager& components; // Reference, not a pointer
      
-  public:
-    ISystem(ComponentManager& cm) : components(cm) {}
-    virtual ~ISystem() = default;
+    public:
+      ISystem(ComponentManager& cm) : components(cm) {}
+      virtual ~ISystem() = default;
     
-    virtual void update(float deltaTime) = 0;
-    virtual int getTickRate() const = 0;
-    virtual Signature getSignature() const = 0;
+      virtual void update(float deltaTime) = 0;
+      virtual int getTickRate() const = 0;
+      virtual Signature getSignature() const = 0;
 
-    std::vector<EntityID> assignedEntities; // Entities the system processes
-};
+      std::vector<EntityID> assignedEntities; // Entities the system processes
+  };
+  
+}
