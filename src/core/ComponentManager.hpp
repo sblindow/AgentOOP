@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 #include <core/CoreTypes.hpp>
 #include <vector>
@@ -65,7 +65,10 @@ namespace core {
 
       public:
         template <typename T>
-        static ComponentTypeIndex getIndex();
+        static ComponentTypeIndex getIndex(){
+          static ComponentTypeIndex id = counter++;
+          return id;
+        }
     };
 
     private:
@@ -74,25 +77,52 @@ namespace core {
 
       // helper function
       template <typename T>
-      ComponentArray<T>* getArray();
+      ComponentArray<T>* getArray(){
+        ComponentTypeIndex index = getComponentTypeID<T>();
+        assert(index < componentArraysVector.size() && componentArraysVector[index] != nullptr
+               && "Component type not registered!");
+        return static_cast<ComponentArray<T>*>(componentArraysVector[index].get());
+      }
 
     public:
       // helper function
       template <typename T>
-      ComponentTypeIndex getComponentTypeID();
+      ComponentTypeIndex getComponentTypeID(){
+        return ComponentTypeIndexGenerator::getIndex<T>();
+      }
 
       template <typename T>
-      ComponentTypeIndex registerComponent();
+      ComponentTypeIndex registerComponent(){
+        ComponentTypeIndex id = getComponentTypeID<T>(); // ID zuerst holen/erzeugen
+
+        if (id >= componentArraysVector.size()){
+          componentArraysVector.resize(id + 1); // Lücke bis zur ID auffüllen
+        }
+        
+        assert(componentArraysVector[id] == nullptr && "Component type already registered!");
+        componentArraysVector[id] = std::make_unique<ComponentArray<T>>(); // Zuweisung auf angelegten Platz
+        return id;
+      }
 
       template <typename T>
-      void addComponent(EntityID entity, T component);
+      void addComponent(EntityID entity, T component){
+        getArray<T>()->addComponent(entity, component); // call wrapper function addComponent and pass arguments
+      }
 
       template <typename T>
-      T& getComponent(EntityID entity);
+      T& getComponent(EntityID entity){
+        return getArray<T>()->getComponent(entity);
+      }
 
       template <typename T>
-      void removeComponentFromEntity(EntityID entity);
+      void removeComponentFromEntity(EntityID entity){
+        getArray<T>()->removeEntity(entity);
+      }
 
-      void entityDestroyed(EntityID entity);
+      void entityDestroyed(EntityID entity){
+        for (auto& component : componentArraysVector){
+          component->removeEntity(entity);
+        }
+      }
   };
 }
