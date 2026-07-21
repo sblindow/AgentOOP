@@ -56,7 +56,7 @@ static Vector2 lean = {0};
 // Module Functions Declaration
 //============================================================
 
-static void DrawLevel(void);
+static void DrawLevel(Model levelModel);
 static void UpdateCameraFPS(Camera *camera);
 static void UpdateBody(Body *body, float rot, char side, char forward, bool jumpPressed, bool crouchHold);
 
@@ -106,6 +106,9 @@ int main (void)
   //
   
   Model levelModel = LoadModel("../assets/levelmesh.glb");
+  if (levelModel.meshCount == 0) {
+    TraceLog(LOG_WARNING, "Level model failed to load!");
+  }
 
   
   // Main Game Loop
@@ -163,6 +166,7 @@ int main (void)
 
   // De-Initialization
   // -----------------------------------------------------------
+  UnloadModel(levelModel);
   CloseWindow();
   // -----------------------------------------------------------
   

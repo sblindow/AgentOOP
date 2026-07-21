@@ -41,17 +41,17 @@ target_sources(${LIBNAME}
   # agents
   src/agents/Agent.cpp
   src/agents/AgentGraph.cpp
+
+  # agents/systems
+  src/agents/systems/GraphMovement.cpp
   
   # graphs
   src/graphs/SpatialGraph.cpp
-  
-  # core
-  src/core/EntityManager.cpp
-  src/core/ComponentManager.cpp
-  
-  # include targets
 
-  
+  #systems
+  src/systems/MovementSystem.cpp
+
+  # include targets
   src/agents/Agent.hpp
   src/agents/AgentGraph.hpp
   src/graphs/SpatialGraph.hpp
