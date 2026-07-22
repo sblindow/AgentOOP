@@ -1,32 +1,26 @@
-#pragma once
-
 #include <cstdint>
 #include <raylib.h>
 #include <raymath.h>
+#include <iostream>
 
 #include "components/InputState.hpp"
+#include "components/Position.hpp"
+#include "components/Velocity.hpp"
+#include "components/MoveDir.hpp"
+#include "components/Grounded.hpp"
+#include "components/InputState.hpp"
+#include "components/LookRotation.hpp"
+
+
 #include "core/ECSCoordinator.hpp"
-#include "../include/InputHandling.hpp"
+#include "Player.hpp"
+#include "systems/MovementSystem.hpp"
 
 //============================================================
 // Defines and Macros
 //============================================================
 
-// Movement Constants
-#define GRAVITY 32.0f
-#define MAX_SPEED 20.0f
-#define CROUCH_SPEED 5.0f
-#define JUMP_FORCE 12.0f
-#define MAX_ACCEL 150.0f
-
-// Grounded drag
-#define FRICTION 0.86f
-
-// Increasing air drag, increases strafing speed
-#define AIR_DRAG 0.98f
-
 // Responsiveness for turning movement direction to looked direction
-#define CONTROL 15.0f
 #define CROUCH_HEIGHT 0.0f
 #define STAND_HEIGHT 1.0f
 #define BOTTOM_HEIGHT 0.5f
@@ -44,7 +38,6 @@
 
 static Vector2 sensitivity = {0.001f, 0.001f};
 
-static Vector2 lookRotation = {0};
 static float headTimer = 0.0f;
 static float walkLerp = 0.0f;
 static float headLerp = STAND_HEIGHT;
@@ -55,8 +48,7 @@ static Vector2 lean = {0};
 //============================================================
 
 static void DrawLevel(Model levelModel);
-static void UpdateCameraFPS(Camera *camera);
-static void UpdateBody(InputState& input, float rot);
+static void UpdateCameraFPS(Camera *camera, Vector2& lookRotation);
 
 // Draw game level
 
@@ -74,33 +66,78 @@ int main(void) {
 
   // Initialization
   // ----------------------------------------------------
-  const int screenWidth = 1200;
-  const int screenHeight = 800;
+  const int screenWidth = 2560;
+  const int screenHeight = 1440;
 
   InitWindow(screenWidth, screenHeight, "game window");
 
-  // Initialize camera variables
-  // Note: UpdateCameraFPS() takes care of the rest
-  Camera camera = {0};
-  camera.fovy = 60.0f;
-  camera.projection = CAMERA_PERSPECTIVE;
-  camera.position = (Vector3){
-      player.position.x,
-      player.position.y + (BOTTOM_HEIGHT + headLerp),
-      player.position.z,
-  };
-
-  UpdateCameraFPS(&camera); // Update camera parameters
+  
 
   DisableCursor(); // Limit cursor to relative movement inside the window
 
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
   // Initialize ECS
-
-
-  // ----------------------------------------------------
   //
+  core::ECSCoordinator coordinator;
+
+  // register component types
+
+  coordinator.registerComponent<Position>();
+  coordinator.registerComponent<Velocity>();
+  coordinator.registerComponent<MoveDir>();
+  coordinator.registerComponent<Grounded>();
+  coordinator.registerComponent<InputState>();
+  coordinator.registerComponent<LookRotation>();
+
+  // register systems
+
+  coordinator.registerSystem<MovementSystem>();
+
+  // register and create player
+
+  game::Player player;
+  player.createPlayer(coordinator);
+  
+  // Initialize camera variables
+  // Note: UpdateCameraFPS() takes care of the rest
+  Camera camera = {0};
+  camera.fovy = 60.0f;
+  camera.projection = CAMERA_PERSPECTIVE;
+
+  auto& playerPos = coordinator.getComponent<Position>(player.getPlayerID()).value;
+  
+  camera.position = (Vector3){
+      playerPos.x,
+      playerPos.y + (BOTTOM_HEIGHT + headLerp),
+      playerPos.z,
+  };
+
+  
+  UpdateCameraFPS(&camera, coordinator.getComponent<LookRotation>(player.getPlayerID()).rotation); // Update camera parameters
+   
+  // ----------------------------------------------------
+  // Test mit manuell gesetztem Input
+
+  auto& input = coordinator.getComponent<InputState>(player.getPlayerID());
+  input.forward = 1;
+
+  auto& posBefore = coordinator.getComponent<Position>(player.getPlayerID()).value;
+  
+  std::cout << "Position vor Update: ("
+            << posBefore.x << ", " << posBefore.y << ", " << posBefore.z << ")\n";
+    
+  coordinator.update(1.0f / 60.0f);
+
+  auto& posAfter = coordinator.getComponent<Position>(player.getPlayerID()).value;
+  
+  std::cout << "Position nach Update: ("
+            << posAfter.x << ", " << posAfter.y << ", " << posAfter.z << ")\n"; 
+  
+
+  auto& pos = coordinator.getComponent<Position>(player.getPlayerID());
+
+  
 
   Model levelModel = LoadModel("../assets/levelmesh.glb");
   if (levelModel.meshCount == 0) {
@@ -111,28 +148,46 @@ int main(void) {
 
   while (WindowShouldClose() == false) {
 
+    float delta = GetFrameTime();
+
     // Update
     // ---------------------------------------------------------
 
     // write input into player-entity input-component
-
+    //
+    //
+    // --- Eingabe einsammeln und in Components schreiben ---
+    
     Vector2 mouseDelta = GetMouseDelta();
-    lookRotation.x -= mouseDelta.x * sensitivity.x;
-    lookRotation.y += mouseDelta.y * sensitivity.y;
 
-    UpdateBody(&player, lookRotation.x, sideway, forward,
-               IsKeyPressed(KEY_SPACE), crouching);
+    auto& rot = coordinator.getComponent<LookRotation>(player.getPlayerID()).rotation;
+    rot.x -= mouseDelta.x * sensitivity.x;
+    rot.y += mouseDelta.y * sensitivity.y;
 
-    float delta = GetFrameTime();
-    headLerp = Lerp(headLerp, (crouching ? CROUCH_HEIGHT : STAND_HEIGHT),
+    auto& input = coordinator.getComponent<InputState>(player.getPlayerID());
+    input.sideway = (IsKeyDown(KEY_D) - IsKeyDown(KEY_A));
+    input.forward = (IsKeyDown(KEY_W) - IsKeyDown(KEY_S));
+    input.jumpPressed = IsKeyPressed(KEY_SPACE);
+    input.crouchHeld = IsKeyDown(KEY_C);
+
+    // --- ECS System ausführen ---
+    
+    coordinator.update(delta);
+
+    // --- Kamera aus aktualisierten Components nachziehen ---
+
+    auto& pos = coordinator.getComponent<Position>(player.getPlayerID()).value;
+    bool grounded = coordinator.getComponent<Grounded>(player.getPlayerID()).isGrounded;
+        
+    headLerp = Lerp(headLerp, (input.crouchHeld ? CROUCH_HEIGHT : STAND_HEIGHT),
                     20.0f * delta);
     camera.position = (Vector3){
-        player.position.x,
-        player.position.y + (BOTTOM_HEIGHT + headLerp),
-        player.position.z,
+        pos.x,
+        pos.y + (BOTTOM_HEIGHT + headLerp),
+        pos.z,
     };
 
-    if (player.isGrounded && ((forward != 0) || (sideway != 0))) {
+    if (grounded && ((input.forward != 0) || (input.sideway != 0))) {
       headTimer += delta * 3.0f;
       walkLerp = Lerp(walkLerp, 1.0f, 10.0f * delta);
       camera.fovy = Lerp(camera.fovy, 55.0f, 5.0f * delta);
@@ -141,10 +196,12 @@ int main(void) {
       camera.fovy = Lerp(camera.fovy, 60.0f, 5.0f * delta);
     }
 
-    lean.x = Lerp(lean.x, sideway * 0.02f, 10.0f * delta);
-    lean.y = Lerp(lean.y, forward * 0.015f, 10.0f * delta);
+    lean.x = Lerp(lean.x, input.sideway * 0.02f, 10.0f * delta);
+    lean.y = Lerp(lean.y, input.forward * 0.015f, 10.0f * delta);
 
-    UpdateCameraFPS(&camera);
+  
+
+    UpdateCameraFPS(&camera,rot);
     // ---------------------------------------------------------
 
     // Draw
@@ -174,76 +231,8 @@ int main(void) {
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 
-// Update body considering current world state
-void UpdateBody(Body *body, float rot, char side, char forward,
-                bool jumpPressed, bool crouchHold) {
-  Vector2 input = (Vector2){(float)side, (float)-forward};
-
-#if defined(NORMALIZE_INPUT)
-  // slow down diagonal movement
-  if ((side != 0) && (forward != 0))
-    input = Vector2Normalize(input);
-#endif
-
-  float delta = GetFrameTime();
-
-  if (!body->isGrounded)
-    body->velocity.y -= GRAVITY * delta;
-
-  if (body->isGrounded && jumpPressed) {
-    body->velocity.y = JUMP_FORCE;
-    body->isGrounded = false;
-
-    // Sound can be played at this moment
-  }
-
-  Vector3 front = (Vector3){sinf(rot), 0.f, cosf(rot)};
-  Vector3 right = (Vector3){cosf(-rot), 0.f, sinf(-rot)};
-
-  Vector3 desiredDir = (Vector3){
-      input.x * right.x + input.y * front.x,
-      0.0f,
-      input.x * right.z + input.y * front.z,
-  };
-  body->dir = Vector3Lerp(body->dir, desiredDir, CONTROL * delta);
-
-  float decel = (body->isGrounded ? FRICTION : AIR_DRAG);
-  Vector3 hvel =
-      (Vector3){body->velocity.x * decel, 0.0f, body->velocity.z * decel};
-
-  float hvelLength = Vector3Length(hvel); // Magnitude
-  if (hvelLength < (MAX_SPEED * 0.01f))
-    hvel = (Vector3){0};
-
-  // This is what creates strafing
-  float speed = Vector3DotProduct(hvel, body->dir);
-
-  // Whenever the amount of acceleration to add is clamped by the maximum
-  // acceleration constant, a Player can make the speed faster by bringing the
-  // direction closer to horizontal velocity angle More info here:
-  // https://youtu.be/v3zT3Z5apaM?t=165
-  float maxSpeed = (crouchHold ? CROUCH_SPEED : MAX_SPEED);
-  float accel = Clamp(maxSpeed - speed, 0.f, MAX_ACCEL * delta);
-  hvel.x += body->dir.x * accel;
-  hvel.z += body->dir.z * accel;
-
-  body->velocity.x = hvel.x;
-  body->velocity.z = hvel.z;
-
-  body->position.x += body->velocity.x * delta;
-  body->position.y += body->velocity.y * delta;
-  body->position.z += body->velocity.z * delta;
-
-  // Fancy collision system against the floor
-  if (body->position.y <= 0.0f) {
-    body->position.y = 0.0f;
-    body->velocity.y = 0.0f;
-    body->isGrounded = true; // Enable jumping
-  }
-}
-
 // Update camera for FPS behavior
-static void UpdateCameraFPS(Camera *camera) {
+static void UpdateCameraFPS(Camera *camera, Vector2& lookRotation) {
   const Vector3 up = (Vector3){0.0f, 1.0f, 0.0f};
   const Vector3 targetOffset = (Vector3){0.0f, 0.0f, -1.0f};
 

@@ -12,6 +12,6 @@ namespace game {
     public:
       void setPlayerID (core::EntityID id);
       core::EntityID getPlayerID();
-      void createPlayer(core::ECSCoordinator ecsC);   
+      void createPlayer(core::ECSCoordinator& ecsC);   
   };
 }

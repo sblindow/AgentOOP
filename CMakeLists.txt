@@ -47,6 +47,10 @@ target_sources(${LIBNAME}
 
   #systems
 
+
+  # game
+  src/game/Player.cpp
+
   # include targets
   src/agents/Agent.hpp
   src/agents/AgentGraph.hpp

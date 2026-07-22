@@ -71,7 +71,7 @@ class MovementSystem : public core::ISystem {
             input = Vector2Normalize(input);
         #endif
 
-        float delta = GetFrameTime();
+        float delta = deltaTime;
 
         if (!grd){
           vel.y -= GRAVITY * delta;
