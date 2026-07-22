@@ -4,6 +4,8 @@
 
 #include "components/Position.hpp"
 #include "components/Velocity.hpp"
+#include "components/Grounded.hpp"
+#include "components/MoveDir.hpp"
 
 class MovementSystem : public core::ISystem {
   public:
@@ -15,6 +17,8 @@ class MovementSystem : public core::ISystem {
       core::Signature sig;
       sig.set(components.getComponentTypeID<Position>());
       sig.set(components.getComponentTypeID<Velocity>());
+      sig.set(components.getComponentTypeID<MoveDir>());
+      sig.set(components.getComponentTypeID<Grounded>());
       return sig;
     }
 
@@ -22,7 +26,12 @@ class MovementSystem : public core::ISystem {
       for (core::EntityID e : assignedEntities) {
         auto& pos = components.getComponent<Position>(e);
         auto& vel = components.getComponent<Velocity>(e);
+        auto& grd = components.getComponent<Grounded>(e);
+        auto& dir = components.getComponent<MoveDir>(e);
+        
         // ... eigentliche Logik
+
+        
       }
     }
 };
