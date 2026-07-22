@@ -27,6 +27,8 @@
 
 #define NORMALIZE_INPUT 0
 
+#define GLSL_VERSION 330 // Platform Desktop
+
 //============================================================
 // Types and Structs
 //============================================================
@@ -55,7 +57,7 @@ static void UpdateCameraFPS(Camera *camera, Vector2& lookRotation);
 static void DrawLevel(Model levelModel) {
 
   DrawModel(levelModel, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, GRAY);
-  DrawGrid(10, 1.0f);
+  
 }
 
 //============================================================
@@ -66,8 +68,10 @@ int main(void) {
 
   // Initialization
   // ----------------------------------------------------
-  const int screenWidth = 2560;
-  const int screenHeight = 1440;
+  const int screenWidth = 1280;
+  const int screenHeight = 720;
+
+  SetConfigFlags(FLAG_MSAA_4X_HINT); // Enable MultiSampling Anti Aliasing 4x (if available)
 
   InitWindow(screenWidth, screenHeight, "game window");
 
@@ -119,21 +123,16 @@ int main(void) {
   // ----------------------------------------------------
   // Test mit manuell gesetztem Input
 
-  auto& input = coordinator.getComponent<InputState>(player.getPlayerID());
-  input.forward = 1;
 
-  auto& posBefore = coordinator.getComponent<Position>(player.getPlayerID()).value;
-  
-  std::cout << "Position vor Update: ("
-            << posBefore.x << ", " << posBefore.y << ", " << posBefore.z << ")\n";
-    
-  coordinator.update(1.0f / 60.0f);
+  // Load basic lighting shader
+  Shader shader = LoadShader("../resources/shaders/glsl330/lighting.vs",
+                             "../resources/shaders/glsl330/lighting.fs");
+  // Get some required shader locations
+  shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
 
-  auto& posAfter = coordinator.getComponent<Position>(player.getPlayerID()).value;
-  
-  std::cout << "Position nach Update: ("
-            << posAfter.x << ", " << posAfter.y << ", " << posAfter.z << ")\n"; 
-  
+  // Ambient light level (some basic lighting)
+  int ambientLoc = GetShaderLocation(shader, "ambient");
+  SetShaderValue(shader, ambientLoc, (float[4]){ 0.1f, 0.1f, 0.1f, 1.0f}, SHADER_UNIFORM_VEC4);
 
   auto& pos = coordinator.getComponent<Position>(player.getPlayerID());
 
@@ -143,7 +142,7 @@ int main(void) {
   if (levelModel.meshCount == 0) {
     TraceLog(LOG_WARNING, "Level model failed to load!");
   }
-
+  
   // Main Game Loop
 
   while (WindowShouldClose() == false) {
@@ -208,11 +207,19 @@ int main(void) {
     // --------------------------------------------------------
     BeginDrawing();
 
-    ClearBackground(RAYWHITE);
+      ClearBackground(RAYWHITE);
+       
+      BeginMode3D(camera);
 
-    BeginMode3D(camera);
-    DrawLevel(levelModel);
-    EndMode3D();
+        BeginShaderMode(shader);
+        
+          DrawLevel(levelModel);
+          
+        EndShaderMode();
+      
+      EndMode3D();
+
+      DrawFPS(10,10);
 
     EndDrawing();
     // ----------------------------------------------------------
@@ -221,6 +228,8 @@ int main(void) {
   // De-Initialization
   // -----------------------------------------------------------
   UnloadModel(levelModel);
+  UnloadShader(shader);
+  
   CloseWindow();
   // -----------------------------------------------------------
 
