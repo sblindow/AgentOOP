@@ -25,8 +25,8 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     set(FETCHCONTENT_QUIET NO)
     set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build examples
     set(BUILD_GAMES OFF CACHE BOOL "" FORCE) # don't build example games
-    set(CUSTOMIZE_BUILD ON CACHE BOOL "" FORCE)
-    set(OPENGL_VERSION "3.3" CACHE STRING "" FORCE)
+    # set(CUSTOMIZE_BUILD ON CACHE BOOL "" FORCE)
+    # set(OPENGL_VERSION "3.3" CACHE STRING "" FORCE)
     FetchContent_MakeAvailable(raylib)
     
   endif()

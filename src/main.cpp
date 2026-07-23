@@ -49,16 +49,7 @@ static Vector2 lean = {0};
 // Module Functions Declaration
 //============================================================
 
-static void DrawLevel(Model levelModel);
 static void UpdateCameraFPS(Camera *camera, Vector2& lookRotation);
-
-// Draw game level
-
-static void DrawLevel(Model levelModel) {
-
-  DrawModel(levelModel, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, GRAY);
-  
-}
 
 //============================================================
 // Program main entry point
@@ -71,7 +62,7 @@ int main(void) {
   const int screenWidth = 1280;
   const int screenHeight = 720;
 
-  SetConfigFlags(FLAG_MSAA_4X_HINT); // Enable MultiSampling Anti Aliasing 4x (if available)
+  // SetConfigFlags(FLAG_MSAA_4X_HINT); // Enable MultiSampling Anti Aliasing 4x (if available)
 
   InitWindow(screenWidth, screenHeight, "game window");
 
@@ -121,27 +112,24 @@ int main(void) {
   UpdateCameraFPS(&camera, coordinator.getComponent<LookRotation>(player.getPlayerID()).rotation); // Update camera parameters
    
   // ----------------------------------------------------
-  // Test mit manuell gesetztem Input
-
-
-  // Load basic lighting shader
-  Shader shader = LoadShader("../resources/shaders/glsl330/lighting.vs",
-                             "../resources/shaders/glsl330/lighting.fs");
-  // Get some required shader locations
-  shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
-
-  // Ambient light level (some basic lighting)
-  int ambientLoc = GetShaderLocation(shader, "ambient");
-  SetShaderValue(shader, ambientLoc, (float[4]){ 0.1f, 0.1f, 0.1f, 1.0f}, SHADER_UNIFORM_VEC4);
-
   auto& pos = coordinator.getComponent<Position>(player.getPlayerID());
 
   
 
-  Model levelModel = LoadModel("../assets/levelmesh.glb");
+  Model levelModel = LoadModel("../assets/level/levelModel.obj");
+  Texture2D texture = LoadTexture("../assets/level/tex_1.png");
+
   if (levelModel.meshCount == 0) {
     TraceLog(LOG_WARNING, "Level model failed to load!");
   }
+
+  Shader shader = LoadShader(0,
+                             "../resources/shaders/glsl330/lighting.frag");
+
+  levelModel.materials[0].shader = shader; // set shader effect to 3d model
+  levelModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // bind texture to model
+
+  Vector3 position = {0.0f, 0.0f, 0.0f}; // Set model position
   
   // Main Game Loop
 
@@ -211,11 +199,9 @@ int main(void) {
        
       BeginMode3D(camera);
 
-        BeginShaderMode(shader);
-        
-          DrawLevel(levelModel);
-          
-        EndShaderMode();
+        DrawModel(levelModel, position, 0.2f, WHITE); // Draw 3d model with texture
+
+        DrawGrid(20, 1.0f);
       
       EndMode3D();
 
@@ -228,7 +214,7 @@ int main(void) {
   // De-Initialization
   // -----------------------------------------------------------
   UnloadModel(levelModel);
-  UnloadShader(shader);
+  // UnloadShader(shader);
   
   CloseWindow();
   // -----------------------------------------------------------
